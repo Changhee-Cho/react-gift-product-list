@@ -1,4 +1,4 @@
-## react-gift-order
+## react-gift-product-list
 
 ### 선물하기 메인 API 구현하기
 
