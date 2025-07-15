@@ -2,8 +2,10 @@ import { css } from '@emotion/react';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import theme from '@src/styles/tokens/index';
-import product from '@src/assets/mock/itemList_mock';
 import { useAuthNavigation } from '@/hooks/useAuthNavigation';
+import loadingGif from '@src/assets/icons/loading.gif';
+
+const REALTIME_API_URL = 'http://localhost:3000/api/products/ranking';
 
 const targets = [
   { key: 'ALL', label: '전체', icon: 'ALL' },
@@ -245,6 +247,10 @@ const moreButton = css`
   border: 1px solid ${theme.colors.textDisabled};
   background: none;
   cursor: pointer;
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
 `;
 
 const moreButtonText = css`
@@ -256,6 +262,7 @@ const moreButtonText = css`
   width: 100%;
   text-align: center;
 `;
+
 const spacer40 = css`
   height: 40px;
 `;
@@ -292,6 +299,10 @@ const Realtime = () => {
   const [userHasSelected, setUserHasSelected] = useState(false);
 
   const { navigateIfLoggedIn } = useAuthNavigation();
+
+  const [status, setStatus] = useState({ loading: true, error: false });
+  const [products, setProducts] = useState<any[]>([]);
+
   useEffect(() => {
     if (!userHasSelected && [...searchParams].length === 0) {
       if (selectedTarget === DEFAULT_TARGET && selectedSort === DEFAULT_SORT) {
@@ -309,6 +320,36 @@ const Realtime = () => {
       });
     }
   }, [selectedTarget, selectedSort, userHasSelected, setSearchParams]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setStatus({ loading: true, error: false });
+      try {
+        const params = new URLSearchParams({
+          targetType: selectedTarget,
+          rankType: selectedSort,
+        });
+
+        const response = await fetch(
+          `${REALTIME_API_URL}?${params.toString()}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        setProducts(data.data || []);
+        setStatus({ loading: false, error: false });
+      } catch (e) {
+        setStatus({ loading: false, error: true });
+        setProducts([]);
+      }
+    };
+
+    fetchProducts();
+  }, [selectedTarget, selectedSort]);
 
   const [expanded, setExpanded] = useState(false);
   const displayedCount = expanded ? 21 : 6;
@@ -331,16 +372,30 @@ const Realtime = () => {
   const handleSelectTarget = (key: string) => {
     setSelectedTarget(key);
     setUserHasSelected(true);
+    setExpanded(false);
   };
 
   const handleSelectSort = (key: string) => {
     setSelectedSort(key);
     setUserHasSelected(true);
+    setExpanded(false);
   };
 
-  const goOrder = (key: number) => {
-    navigateIfLoggedIn(`/order/${key}`);
+  const goOrder = (id: number) => {
+    navigateIfLoggedIn(`/order/${id}`);
   };
+
+  const loadingStyle = css`
+    width: 100%;
+    height: 240px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  `;
+
+  const loadingGifStyle = css`
+    width: 50px;
+  `;
 
   return (
     <>
@@ -378,50 +433,65 @@ const Realtime = () => {
         </div>
         <div css={spacer16} />
         <section css={rankingDiv}>
-          <div css={rankingGrid}>
-            {[...Array(displayedCount)].map((_, i) => {
-              const rank = i + 1;
-              return (
-                <div
-                  css={rankingItemBox}
-                  key={rank}
-                  onClick={() => {
-                    goOrder(rank);
-                  }}
+          {status.loading ? (
+            <div css={loadingStyle}>
+              <img css={loadingGifStyle} src={loadingGif} alt="Loading..." />
+            </div>
+          ) : status.error ? (
+            <div css={loadingStyle}>
+              <p>데이터를 불러오는 중 오류가 발생했습니다.</p>
+            </div>
+          ) : products.length === 0 ? (
+            <div css={loadingStyle}>
+              <p>상품이 없습니다.</p>
+            </div>
+          ) : (
+            <>
+              <div css={rankingGrid}>
+                {products.slice(0, displayedCount).map((product, i) => {
+                  const rank = i + 1;
+                  return (
+                    <div
+                      css={rankingItemBox}
+                      key={product.id}
+                      onClick={() => goOrder(product.id)}
+                    >
+                      <span css={rank <= 3 ? rankingNumberWins : rankingNumber}>
+                        {rank}
+                      </span>
+                      <div css={rankingItemInfo}>
+                        <img
+                          css={rankingItemImg}
+                          src={product.imageURL}
+                          alt={product.name}
+                        />
+                        <div css={spacer12} />
+                        <p css={rankingItemBrand}>{product.brandInfo.name}</p>
+                        <h6 css={rankingItemName}>{product.name}</h6>
+                        <div css={spacer4} />
+                        <p css={rankingItemPrice}>
+                          {product.price.sellingPrice.toLocaleString()}원
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div css={spacer32} />
+              <div css={moreButtonCover}>
+                <button
+                  css={moreButton}
+                  type="button"
+                  onClick={() => setExpanded((prev) => !prev)}
+                  disabled={
+                    status.loading || status.error || products.length === 0
+                  }
                 >
-                  <span css={rank <= 3 ? rankingNumberWins : rankingNumber}>
-                    {rank}
-                  </span>
-                  <div css={rankingItemInfo}>
-                    <img
-                      css={rankingItemImg}
-                      src={product.imageURL}
-                      alt={product.name}
-                    />
-                    <div css={spacer12} />
-                    <p css={rankingItemBrand}>{product.brandInfo.name}</p>
-                    <h6 css={rankingItemName}>{product.name}</h6>
-                    <div css={spacer4} />
-                    <p css={rankingItemPrice}>
-                      {product.price.sellingPrice}
-                      <span style={{ fontWeight: 400 }}>원</span>
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div css={spacer32} />
-          <div css={moreButtonCover}>
-            <button
-              css={moreButton}
-              type="button"
-              onClick={() => setExpanded((prev) => !prev)}
-            >
-              <p css={moreButtonText}>{expanded ? '접기' : '더보기'}</p>
-            </button>
-          </div>
+                  <p css={moreButtonText}>{expanded ? '접기' : '더보기'}</p>
+                </button>
+              </div>
+            </>
+          )}
         </section>
       </section>
       <div css={spacer40} />

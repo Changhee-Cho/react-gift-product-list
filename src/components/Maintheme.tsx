@@ -70,6 +70,8 @@ const loadingStyle = css`
   justify-content: center;
   align-items: center;
   padding: 40px 0;
+  height: 320px;
+  padding: 8px;
 `;
 
 const loadingGifStyle = css`
