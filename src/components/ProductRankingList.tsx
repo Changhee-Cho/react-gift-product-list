@@ -2,6 +2,8 @@ import { css } from '@emotion/react';
 import { useAuthNavigation } from '@/hooks/useAuthNavigation';
 import theme from '@src/styles/tokens/index';
 
+const TOP_RANK_COUNT = 3;
+
 const rankingGrid = css`
   width: 100%;
   box-sizing: border-box;
@@ -138,7 +140,9 @@ const ProductRankingList = ({ products, expanded }: Props) => {
             key={product.id}
             onClick={() => goOrder(product.id)}
           >
-            <span css={rank <= 3 ? rankingNumberWins : rankingNumber}>
+            <span
+              css={rank <= TOP_RANK_COUNT ? rankingNumberWins : rankingNumber}
+            >
               {rank}
             </span>
             <div css={rankingItemInfo}>
