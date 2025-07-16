@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react';
 import { css } from '@emotion/react';
 import theme from '@src/styles/tokens/index';
 import loadingGif from '@src/assets/icons/loading.gif';
-import apiClient from '@src/lib/apiClient';
-
-const PRESENT_THEMES_URL = '/themes';
+import { fetchThemes } from '@/apis/themeApi';
 
 const divStyle = css`
   width: 100%;
@@ -87,18 +85,18 @@ const Maintheme = () => {
   });
 
   useEffect(() => {
-    const fetchThemes = async () => {
+    const getThemes = async () => {
       try {
         setStatus({ loading: true, error: false });
-        const res = await apiClient.get(PRESENT_THEMES_URL);
-        setCategories(res.data.data);
+        const data = await fetchThemes();
+        setCategories(data);
         setStatus({ loading: false, error: false });
       } catch (error) {
         setStatus({ loading: false, error: true });
       }
     };
 
-    fetchThemes();
+    getThemes();
   }, []);
 
   return (

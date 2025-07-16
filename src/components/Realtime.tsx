@@ -4,9 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import theme from '@src/styles/tokens/index';
 import { useAuthNavigation } from '@/hooks/useAuthNavigation';
 import loadingGif from '@src/assets/icons/loading.gif';
-import apiClient from '@src/lib/apiClient';
-
-const REALTIME_API_URL = '/products/ranking';
+import { fetchRankingProducts } from '@/apis/productApi';
 
 const targets = [
   { key: 'ALL', label: '전체', icon: 'ALL' },
@@ -326,16 +324,11 @@ const Realtime = () => {
     const fetchProducts = async () => {
       setStatus({ loading: true, error: false });
       try {
-        const params = {
+        const data = await fetchRankingProducts({
           targetType: selectedTarget,
           rankType: selectedSort,
-        };
-
-        const response = await apiClient.get(REALTIME_API_URL, {
-          params,
         });
-
-        setProducts(response.data.data || []);
+        setProducts(data || []);
         setStatus({ loading: false, error: false });
       } catch (e) {
         setStatus({ loading: false, error: true });
