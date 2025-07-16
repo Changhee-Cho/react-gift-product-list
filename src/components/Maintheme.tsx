@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
 import { css } from '@emotion/react';
 import theme from '@src/styles/tokens/index';
 import loadingGif from '@src/assets/icons/loading.gif';
-import { fetchThemes } from '@/apis/themeApi';
+import useThemeCategories from '@/hooks/useThemeCategories';
 
 const divStyle = css`
   width: 100%;
@@ -78,28 +77,9 @@ const loadingGifStyle = css`
 `;
 
 const Maintheme = () => {
-  const [categories, setCategories] = useState([]);
-  const [status, setStatus] = useState({
-    loading: true,
-    error: false,
-  });
+  const { categories, loading, error } = useThemeCategories();
 
-  useEffect(() => {
-    const getThemes = async () => {
-      try {
-        setStatus({ loading: true, error: false });
-        const data = await fetchThemes();
-        setCategories(data);
-        setStatus({ loading: false, error: false });
-      } catch (error) {
-        setStatus({ loading: false, error: true });
-      }
-    };
-
-    getThemes();
-  }, []);
-
-  if (status.loading) {
+  if (loading) {
     return (
       <div css={loadingStyle}>
         <img css={loadingGifStyle} src={loadingGif} alt="Loading..." />
@@ -107,7 +87,7 @@ const Maintheme = () => {
     );
   }
 
-  if (status.error || categories.length === 0) {
+  if (error || categories.length === 0) {
     return null;
   }
 

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import theme from '@src/styles/tokens/index';
 import loadingGif from '@src/assets/icons/loading.gif';
-import { fetchRankingProducts } from '@/apis/productApi';
+import useRankingProducts from '@src/hooks/useRankingProducts';
 import ProductRankingList from '@src/components/ProductRankingList';
 
 const targets = [
@@ -206,8 +206,10 @@ const Realtime = () => {
   const [selectedSort, setSelectedSort] = useState(initialSort);
   const [userHasSelected, setUserHasSelected] = useState(false);
 
-  const [status, setStatus] = useState({ loading: true, error: false });
-  const [products, setProducts] = useState<any[]>([]);
+  const { loading, error, products } = useRankingProducts({
+    targetType: selectedTarget,
+    rankType: selectedSort,
+  });
 
   useEffect(() => {
     if (!userHasSelected && [...searchParams].length === 0) {
@@ -226,25 +228,6 @@ const Realtime = () => {
       });
     }
   }, [selectedTarget, selectedSort, userHasSelected, setSearchParams]);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setStatus({ loading: true, error: false });
-      try {
-        const data = await fetchRankingProducts({
-          targetType: selectedTarget,
-          rankType: selectedSort,
-        });
-        setProducts(data || []);
-        setStatus({ loading: false, error: false });
-      } catch (e) {
-        setStatus({ loading: false, error: true });
-        setProducts([]);
-      }
-    };
-
-    fetchProducts();
-  }, [selectedTarget, selectedSort]);
 
   const [expanded, setExpanded] = useState(false);
 
@@ -277,13 +260,13 @@ const Realtime = () => {
 
   let content;
 
-  if (status.loading) {
+  if (loading) {
     content = (
       <div css={loadingStyle}>
         <img css={loadingGifStyle} src={loadingGif} alt="Loading..." />
       </div>
     );
-  } else if (status.error) {
+  } else if (error) {
     content = (
       <div css={loadingStyle}>
         <p>데이터를 불러오는 중 오류가 발생했습니다.</p>
@@ -305,7 +288,7 @@ const Realtime = () => {
             css={moreButton}
             type="button"
             onClick={() => setExpanded((prev) => !prev)}
-            disabled={status.loading || status.error || products.length === 0}
+            disabled={loading || error || products.length === 0}
           >
             <p css={moreButtonText}>{expanded ? '접기' : '더보기'}</p>
           </button>
