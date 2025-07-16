@@ -99,30 +99,34 @@ const Maintheme = () => {
     getThemes();
   }, []);
 
+  if (status.loading) {
+    return (
+      <div css={loadingStyle}>
+        <img css={loadingGifStyle} src={loadingGif} alt="Loading..." />
+      </div>
+    );
+  }
+
+  if (status.error || categories.length === 0) {
+    return null;
+  }
+
   return (
     <>
-      {status.loading ? (
-        <div css={loadingStyle}>
-          <img css={loadingGifStyle} src={loadingGif} alt="Loading..." />
+      <div css={divStyle} />
+      <section css={themeStyle}>
+        <div css={themeTitleDiv}>
+          <h3 css={titleTextStyle}>선물 테마</h3>
         </div>
-      ) : status.error ? null : categories.length === 0 ? null : (
-        <>
-          <div css={divStyle} />
-          <section css={themeStyle}>
-            <div css={themeTitleDiv}>
-              <h3 css={titleTextStyle}>선물 테마</h3>
+        <div css={itemsBox}>
+          {categories.map(({ themeId, name, image }) => (
+            <div key={themeId} css={itemDiv}>
+              <img css={itemImage} src={image} alt={name} />
+              <p css={itemBoxText}>{name}</p>
             </div>
-            <div css={itemsBox}>
-              {categories.map(({ themeId, name, image }) => (
-                <div key={themeId} css={itemDiv}>
-                  <img css={itemImage} src={image} alt={name} />
-                  <p css={itemBoxText}>{name}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        </>
-      )}
+          ))}
+        </div>
+      </section>
     </>
   );
 };
