@@ -4,8 +4,9 @@ import { useSearchParams } from 'react-router-dom';
 import theme from '@src/styles/tokens/index';
 import { useAuthNavigation } from '@/hooks/useAuthNavigation';
 import loadingGif from '@src/assets/icons/loading.gif';
+import apiClient from '@src/lib/apiClient';
 
-const REALTIME_API_URL = 'http://localhost:3000/api/products/ranking';
+const REALTIME_API_URL = '/products/ranking';
 
 const targets = [
   { key: 'ALL', label: '전체', icon: 'ALL' },
@@ -325,22 +326,16 @@ const Realtime = () => {
     const fetchProducts = async () => {
       setStatus({ loading: true, error: false });
       try {
-        const params = new URLSearchParams({
+        const params = {
           targetType: selectedTarget,
           rankType: selectedSort,
+        };
+
+        const response = await apiClient.get(REALTIME_API_URL, {
+          params,
         });
 
-        const response = await fetch(
-          `${REALTIME_API_URL}?${params.toString()}`
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        setProducts(data.data || []);
+        setProducts(response.data.data || []);
         setStatus({ loading: false, error: false });
       } catch (e) {
         setStatus({ loading: false, error: true });

@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { css } from '@emotion/react';
 import theme from '@src/styles/tokens/index';
 import loadingGif from '@src/assets/icons/loading.gif';
+import apiClient from '@src/lib/apiClient';
 
-const PRESENT_THEMES_URL = 'http://localhost:3000/api/themes';
+const PRESENT_THEMES_URL = '/themes';
 
 const divStyle = css`
   width: 100%;
@@ -89,14 +90,8 @@ const Maintheme = () => {
     const fetchThemes = async () => {
       try {
         setStatus({ loading: true, error: false });
-        const res = await fetch(PRESENT_THEMES_URL);
-
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-
-        const json = await res.json();
-        setCategories(json.data);
+        const res = await apiClient.get(PRESENT_THEMES_URL);
+        setCategories(res.data.data);
         setStatus({ loading: false, error: false });
       } catch (error) {
         setStatus({ loading: false, error: true });
@@ -133,4 +128,5 @@ const Maintheme = () => {
     </>
   );
 };
+
 export default Maintheme;
