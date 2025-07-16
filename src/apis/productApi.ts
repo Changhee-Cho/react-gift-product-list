@@ -1,6 +1,5 @@
 import apiClient from '@src/lib/apiClient';
-
-const REALTIME_API_URL = '/products/ranking';
+import { REALTIME_API_URL } from '@src/apis/constants';
 
 export async function fetchRankingProducts(params: {
   targetType: string;
