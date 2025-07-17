@@ -2,8 +2,9 @@ import { css } from '@emotion/react';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import theme from '@src/styles/tokens/index';
-import product from '@src/assets/mock/itemList_mock';
-import { useAuthNavigation } from '@/hooks/useAuthNavigation';
+import loadingGif from '@src/assets/icons/loading.gif';
+import useRankingProducts from '@src/hooks/useRankingProducts';
+import ProductRankingList from '@src/components/ProductRankingList';
 
 const targets = [
   { key: 'ALL', label: '전체', icon: 'ALL' },
@@ -134,102 +135,6 @@ const rankingDiv = css`
   width: 100%;
 `;
 
-const rankingGrid = css`
-  width: 100%;
-  box-sizing: border-box;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px 8px;
-`;
-
-const rankingItemBox = css`
-  width: 100%;
-  position: relative;
-  &:hover {
-    cursor: pointer;
-  }
-`;
-
-const rankingNumberWins = css`
-  position: absolute;
-  z-index: 2;
-  width: 1.25rem;
-  height: 1.25rem;
-  border-radius: 4px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  top: 0.25rem;
-  left: 0.25rem;
-  color: #fff;
-  background-color: ${theme.colors.red600};
-`;
-
-const rankingNumber = css`
-  position: absolute;
-  z-index: 2;
-  width: 1.25rem;
-  height: 1.25rem;
-  border-radius: 4px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  top: 0.25rem;
-  left: 0.25rem;
-  color: #fff;
-  background-color: ${theme.colors.textSub};
-`;
-
-const rankingItemInfo = css`
-  width: 100%;
-`;
-
-const rankingItemImg = css`
-  width: 100%;
-  object-fit: cover;
-  object-position: center center;
-  border-radius: 4px;
-  overflow: hidden;
-`;
-
-const rankingItemBrand = css`
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.875rem;
-  font-weight: 400;
-  line-height: 1.1875rem;
-  color: ${theme.colors.textSub};
-  margin: 0px;
-  text-align: left;
-`;
-
-const rankingItemName = css`
-  font-size: 0.875rem;
-  font-weight: 400;
-  line-height: 1.1875rem;
-  color: ${theme.colors.textDefault};
-  margin: 0px;
-  text-align: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-`;
-
-const rankingItemPrice = css`
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.5rem;
-  color: ${theme.colors.textDefault};
-  margin: 0px;
-  text-align: left;
-  word-break: break-word;
-`;
-
 const moreButtonCover = css`
   width: 100%;
   box-sizing: border-box;
@@ -245,6 +150,10 @@ const moreButton = css`
   border: 1px solid ${theme.colors.textDisabled};
   background: none;
   cursor: pointer;
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
 `;
 
 const moreButtonText = css`
@@ -256,23 +165,29 @@ const moreButtonText = css`
   width: 100%;
   text-align: center;
 `;
+
 const spacer40 = css`
   height: 40px;
 `;
 const spacer16 = css`
   height: 16px;
 `;
-const spacer12 = css`
-  height: 12px;
-`;
-const spacer4 = css`
-  height: 4px;
-`;
 const spacer32 = css`
   height: 32px;
 `;
 const spacer20 = css`
   height: 20px;
+`;
+const loadingStyle = css`
+  width: 100%;
+  height: 240px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const loadingGifStyle = css`
+  width: 50px;
 `;
 
 const Realtime = () => {
@@ -291,7 +206,11 @@ const Realtime = () => {
   const [selectedSort, setSelectedSort] = useState(initialSort);
   const [userHasSelected, setUserHasSelected] = useState(false);
 
-  const { navigateIfLoggedIn } = useAuthNavigation();
+  const { loading, error, products } = useRankingProducts({
+    targetType: selectedTarget,
+    rankType: selectedSort,
+  });
+
   useEffect(() => {
     if (!userHasSelected && [...searchParams].length === 0) {
       if (selectedTarget === DEFAULT_TARGET && selectedSort === DEFAULT_SORT) {
@@ -311,7 +230,6 @@ const Realtime = () => {
   }, [selectedTarget, selectedSort, userHasSelected, setSearchParams]);
 
   const [expanded, setExpanded] = useState(false);
-  const displayedCount = expanded ? 21 : 6;
 
   const getButtonDivStyle = (key: string) => css`
     ${buttonDivBase};
@@ -331,16 +249,53 @@ const Realtime = () => {
   const handleSelectTarget = (key: string) => {
     setSelectedTarget(key);
     setUserHasSelected(true);
+    setExpanded(false);
   };
 
   const handleSelectSort = (key: string) => {
     setSelectedSort(key);
     setUserHasSelected(true);
+    setExpanded(false);
   };
 
-  const goOrder = (key: number) => {
-    navigateIfLoggedIn(`/order/${key}`);
-  };
+  let content;
+
+  if (loading) {
+    content = (
+      <div css={loadingStyle}>
+        <img css={loadingGifStyle} src={loadingGif} alt="Loading..." />
+      </div>
+    );
+  } else if (error) {
+    content = (
+      <div css={loadingStyle}>
+        <p>데이터를 불러오는 중 오류가 발생했습니다.</p>
+      </div>
+    );
+  } else if (products.length === 0) {
+    content = (
+      <div css={loadingStyle}>
+        <p>상품이 없습니다.</p>
+      </div>
+    );
+  } else {
+    content = (
+      <>
+        <ProductRankingList products={products} expanded={expanded} />
+        <div css={spacer32} />
+        <div css={moreButtonCover}>
+          <button
+            css={moreButton}
+            type="button"
+            onClick={() => setExpanded((prev) => !prev)}
+            disabled={loading || error || products.length === 0}
+          >
+            <p css={moreButtonText}>{expanded ? '접기' : '더보기'}</p>
+          </button>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -377,52 +332,7 @@ const Realtime = () => {
           ))}
         </div>
         <div css={spacer16} />
-        <section css={rankingDiv}>
-          <div css={rankingGrid}>
-            {[...Array(displayedCount)].map((_, i) => {
-              const rank = i + 1;
-              return (
-                <div
-                  css={rankingItemBox}
-                  key={rank}
-                  onClick={() => {
-                    goOrder(rank);
-                  }}
-                >
-                  <span css={rank <= 3 ? rankingNumberWins : rankingNumber}>
-                    {rank}
-                  </span>
-                  <div css={rankingItemInfo}>
-                    <img
-                      css={rankingItemImg}
-                      src={product.imageURL}
-                      alt={product.name}
-                    />
-                    <div css={spacer12} />
-                    <p css={rankingItemBrand}>{product.brandInfo.name}</p>
-                    <h6 css={rankingItemName}>{product.name}</h6>
-                    <div css={spacer4} />
-                    <p css={rankingItemPrice}>
-                      {product.price.sellingPrice}
-                      <span style={{ fontWeight: 400 }}>원</span>
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div css={spacer32} />
-          <div css={moreButtonCover}>
-            <button
-              css={moreButton}
-              type="button"
-              onClick={() => setExpanded((prev) => !prev)}
-            >
-              <p css={moreButtonText}>{expanded ? '접기' : '더보기'}</p>
-            </button>
-          </div>
-        </section>
+        <section css={rankingDiv}>{content}</section>
       </section>
       <div css={spacer40} />
     </>
