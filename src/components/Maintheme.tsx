@@ -3,7 +3,7 @@ import theme from '@src/styles/tokens/index';
 import loadingGif from '@src/assets/icons/loading.gif';
 import useThemeCategories from '@/hooks/useThemeCategories';
 
-const divStyle = css`
+const spacer24 = css`
   width: 100%;
   height: 24px;
   background: transparent;
@@ -93,7 +93,7 @@ const Maintheme = () => {
 
   return (
     <>
-      <div css={divStyle} />
+      <div css={spacer24} />
       <section css={themeStyle}>
         <div css={themeTitleDiv}>
           <h3 css={titleTextStyle}>선물 테마</h3>
