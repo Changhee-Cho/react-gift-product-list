@@ -134,6 +134,7 @@ const PresentCard = () => {
   const handleCardClick = (card: (typeof templates)[0]) => {
     setSelectedCard(card);
     setValue('letter', card.defaultTextMessage, { shouldValidate: true });
+    setValue('messageCardId', card.id.toString(), { shouldValidate: true });
   };
 
   return (

@@ -10,6 +10,7 @@ const DEFAULT_LETTER_MESSAGE = templates[0].defaultTextMessage;
 export const senderSchema = z.object({
   letter: z.string().min(1, LETTER_REQUIRED_MESSAGE),
   senderName: z.string().min(1, SENDER_NAME_REQUIRED_MESSAGE),
+  messageCardId: z.string().optional(),
 });
 
 export type SenderSchema = z.infer<typeof senderSchema>;

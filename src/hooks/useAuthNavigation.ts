@@ -10,7 +10,8 @@ export const useAuthNavigation = () => {
     if (user) {
       navigate(to);
     } else {
-      navigate(ROUTES.LOGIN);
+      const encodedRedirect = encodeURIComponent(to);
+      navigate(`${ROUTES.LOGIN}?redirect=${encodedRedirect}`);
     }
   };
 
