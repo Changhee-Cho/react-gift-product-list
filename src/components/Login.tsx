@@ -6,6 +6,10 @@ import useLoginForm from '@src/hooks/useLoginForm';
 import LoginInput from '@src/components/LoginInput';
 import { useUserInfo } from '@/contexts/AuthContext';
 import ROUTES from '@/constants/routes';
+import { login } from '@/apis/auth';
+import 'react-toastify/dist/ReactToastify.css';
+import { useState } from 'react';
+import loadingGif from '@src/assets/icons/loading.gif';
 
 const mainStyle = css`
   width: 100%;
@@ -53,22 +57,57 @@ const spacer16 = css`
 const spacer48 = css`
   height: ${theme.spacing.spacing12};
 `;
+const loadingDiv = css`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+`;
+const loadingGifStyle = css`
+  width: 50px;
+`;
 
 const Login = () => {
   const { setUser } = useUserInfo();
   const { register, handleSubmit, isError, loginActivated } = useLoginForm();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = (data: { email: string; password: string }) => {
-    const name = data.email.split('@')[0];
-    setUser({ name, email: data.email });
-    const from = location.state?.from?.pathname || ROUTES.HOME;
-    navigate(from, { replace: true });
+  const onSubmit = async (data: { email: string; password: string }) => {
+    setIsLoading(true);
+    try {
+      const { email, name, authToken } = await login(data);
+      setUser({ email, name, authToken });
+
+      const params = new URLSearchParams(location.search);
+      const redirectPath = params.get('redirect');
+
+      if (redirectPath) {
+        navigate(redirectPath, { replace: true });
+      } else {
+        navigate(ROUTES.HOME, { replace: true });
+      }
+    } catch (error) {
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <main css={mainStyle}>
+      {isLoading ? (
+        <div css={loadingDiv}>
+          <img css={loadingGifStyle} src={loadingGif} alt="로딩중..." />
+        </div>
+      ) : (
+        ''
+      )}
       <img css={logoStyle} src={kakao_logo} alt="카카오 공식 로고" />
       <section css={sectionStyle}>
         <form onSubmit={handleSubmit(onSubmit)}>
