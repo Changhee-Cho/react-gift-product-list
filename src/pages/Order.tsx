@@ -175,12 +175,10 @@ const Order = () => {
 
   return (
     <>
-      {isLoading ? (
+      {isLoading && (
         <div css={loadingDiv}>
           <img css={loadingGifStyle} src={loadingGif} alt="로딩중..." />
         </div>
-      ) : (
-        ''
       )}
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)}>

@@ -101,12 +101,10 @@ const Login = () => {
 
   return (
     <main css={mainStyle}>
-      {isLoading ? (
+      {isLoading && (
         <div css={loadingDiv}>
           <img css={loadingGifStyle} src={loadingGif} alt="로딩중..." />
         </div>
-      ) : (
-        ''
       )}
       <img css={logoStyle} src={kakao_logo} alt="카카오 공식 로고" />
       <section css={sectionStyle}>
