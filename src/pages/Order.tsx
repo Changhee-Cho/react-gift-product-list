@@ -19,6 +19,7 @@ import { createOrder } from '@/apis/orderrequest';
 import ROUTES from '@/constants/routes';
 
 const RECEIVER_REQUIRED_MESSAGE = '받는 사람을 추가해 주세요!';
+const LOGIN_REQUIRED_MESSAGE = '로그인이 필요합니다.';
 
 interface Product {
   id: number;
@@ -120,13 +121,15 @@ const Order = () => {
     setIsLoading(true);
     if (totalRecipientQuantity === 0) {
       alert(RECEIVER_REQUIRED_MESSAGE);
+      setIsLoading(false);
       return;
     }
 
     const authToken = user?.authToken;
     if (!authToken) {
-      alert('로그인이 필요합니다.');
+      alert(LOGIN_REQUIRED_MESSAGE);
       navigate('/login');
+      setIsLoading(false);
       return;
     }
 
