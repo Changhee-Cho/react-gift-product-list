@@ -9,20 +9,12 @@ import { FormProvider } from 'react-hook-form';
 import useOrderFormComplete, {
   type SenderSchema,
 } from '@/hooks/useOrderFormComplete';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { fetchProductSummary } from '@/apis/orderpage';
+import { useParams } from 'react-router-dom';
+import { useState } from 'react';
 import loadingGif from '@src/assets/icons/loading.gif';
 import { useUserInfo } from '@/contexts/AuthContext';
-import axios from 'axios';
-import { createOrder } from '@/apis/orderrequest';
-import ROUTES from '@/constants/routes';
-import { toast } from 'react-toastify';
-import type { Product } from '@/types/product';
-
-const RECEIVER_REQUIRED_MESSAGE = '받는 사람을 추가해 주세요!';
-const LOGIN_REQUIRED_MESSAGE = '로그인이 필요합니다.';
-const DEFAULT_API_ERROR_MESSAGE = '요청에 실패했습니다.';
+import { useFetchProduct } from '@/hooks/useFetchProduct';
+import { useCreateOrder } from '@/hooks/useCreateOrder';
 
 const sectionStyle = css`
   width: 100%;
@@ -53,6 +45,7 @@ const buttonStyle = css`
   border: 0;
   cursor: pointer;
 `;
+
 const loadingDiv = css`
   position: fixed;
   top: 0;
@@ -64,6 +57,7 @@ const loadingDiv = css`
   align-items: center;
   z-index: 9999;
 `;
+
 const loadingGifStyle = css`
   width: 50px;
 `;
@@ -74,44 +68,20 @@ const space24 = css`
 
 const Order = () => {
   const { productId } = useParams();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [recipientModalOpen, setRecipientModalOpen] = useState(false);
+  const { product, loading: isFetchingProduct } = useFetchProduct(productId);
   const [recipients, setRecipients] = useState<OrderSchema[]>([]);
+  const [recipientModalOpen, setRecipientModalOpen] = useState(false);
   const methods = useOrderFormComplete();
   const { handleSubmit } = methods;
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-
   const { user } = useUserInfo();
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        if (!productId) return;
-        const data = await fetchProductSummary(productId);
-        setProduct(data);
-      } catch (error: any) {
-        const status = error?.response?.status;
-        const errorMessage =
-          error?.response?.data?.data?.message || DEFAULT_API_ERROR_MESSAGE;
-        if (status >= 400 && status < 500) {
-          toast.error(errorMessage);
-          navigate('/');
-        }
-      }
-    };
+  const { createOrder, isOrdering } = useCreateOrder(
+    user?.authToken,
+    recipients,
+    product
+  );
 
-    fetchProduct();
-  }, [productId]);
-
-  if (!product)
-    return (
-      <div css={loadingDiv}>
-        <img css={loadingGifStyle} src={loadingGif} alt="로딩중..." />
-      </div>
-    );
-
-  const unitPrice = product.price || 0;
+  const unitPrice = product?.price || 0;
   const totalRecipientQuantity = recipients.reduce(
     (sum, r) => sum + (Number(r.quantity) || 0),
     0
@@ -119,67 +89,18 @@ const Order = () => {
   const totalOrderPrice = unitPrice * totalRecipientQuantity;
 
   const onSubmit = async (data: SenderSchema) => {
-    setIsLoading(true);
-    if (totalRecipientQuantity === 0) {
-      alert(RECEIVER_REQUIRED_MESSAGE);
-      setIsLoading(false);
-      return;
-    }
-
-    const authToken = user?.authToken;
-    if (!authToken) {
-      alert(LOGIN_REQUIRED_MESSAGE);
-      navigate('/login');
-      setIsLoading(false);
-      return;
-    }
-
-    const requestBody = {
-      productId: product!.id,
-      messageCardId: String(data.messageCardId),
-      ordererName: data.senderName,
-      message: data.letter,
-      receivers: recipients.map((r) => ({
-        name: r.recipientName,
-        phoneNumber: r.recipientPhone,
-        quantity: Number(r.quantity),
-      })),
-    };
-
-    try {
-      const response = await createOrder(authToken, requestBody);
-
-      if (response.status === 201 && response.data?.data?.success) {
-        alert(
-          `주문이 완료되었습니다.\n` +
-            `상품명: ${product!.name}\n` +
-            `구매 수량: ${totalRecipientQuantity}\n` +
-            `발신자 이름: ${data.senderName}\n` +
-            `메시지: ${data.letter}`
-        );
-        navigate('/');
-      } else {
-        alert('주문 처리에 실패했습니다. 다시 시도해주세요.');
-      }
-    } catch (error: any) {
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          alert('로그인이 필요합니다.');
-          navigate(ROUTES.LOGIN);
-        }
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    await createOrder(data);
   };
+
+  if (!product || isFetchingProduct || isOrdering)
+    return (
+      <div css={loadingDiv}>
+        <img css={loadingGifStyle} src={loadingGif} alt="로딩중..." />
+      </div>
+    );
 
   return (
     <>
-      {isLoading && (
-        <div css={loadingDiv}>
-          <img css={loadingGifStyle} src={loadingGif} alt="로딩중..." />
-        </div>
-      )}
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)}>
           <section css={sectionStyle}>
