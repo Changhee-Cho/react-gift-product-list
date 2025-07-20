@@ -8,11 +8,9 @@ import '@src/styles/reset.css';
 import { UserInfoProvider } from '@src/contexts/AuthContext';
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <UserInfoProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </UserInfoProvider>
-  </StrictMode>
+  <UserInfoProvider>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </UserInfoProvider>
 );
