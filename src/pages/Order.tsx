@@ -18,18 +18,11 @@ import axios from 'axios';
 import { createOrder } from '@/apis/orderrequest';
 import ROUTES from '@/constants/routes';
 import { toast } from 'react-toastify';
+import type { Product } from '@/types/product';
 
 const RECEIVER_REQUIRED_MESSAGE = '받는 사람을 추가해 주세요!';
 const LOGIN_REQUIRED_MESSAGE = '로그인이 필요합니다.';
 const DEFAULT_API_ERROR_MESSAGE = '요청에 실패했습니다.';
-
-interface Product {
-  id: number;
-  name: string;
-  brandName: string;
-  price: number;
-  imageURL: string;
-}
 
 const sectionStyle = css`
   width: 100%;
