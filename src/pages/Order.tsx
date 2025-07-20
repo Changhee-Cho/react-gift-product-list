@@ -17,9 +17,11 @@ import { useUserInfo } from '@/contexts/AuthContext';
 import axios from 'axios';
 import { createOrder } from '@/apis/orderrequest';
 import ROUTES from '@/constants/routes';
+import { toast } from 'react-toastify';
 
 const RECEIVER_REQUIRED_MESSAGE = '받는 사람을 추가해 주세요!';
 const LOGIN_REQUIRED_MESSAGE = '로그인이 필요합니다.';
+const DEFAULT_API_ERROR_MESSAGE = '요청에 실패했습니다.';
 
 interface Product {
   id: number;
@@ -95,8 +97,14 @@ const Order = () => {
         if (!productId) return;
         const data = await fetchProductSummary(productId);
         setProduct(data);
-      } catch (error) {
-        navigate('/');
+      } catch (error: any) {
+        const status = error?.response?.status;
+        const errorMessage =
+          error?.response?.data?.data?.message || DEFAULT_API_ERROR_MESSAGE;
+        if (status >= 400 && status < 500) {
+          toast.error(errorMessage);
+          navigate('/');
+        }
       }
     };
 
@@ -166,7 +174,6 @@ const Order = () => {
           alert('로그인이 필요합니다.');
           navigate(ROUTES.LOGIN);
         }
-      } else {
       }
     } finally {
       setIsLoading(false);

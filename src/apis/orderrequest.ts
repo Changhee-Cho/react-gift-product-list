@@ -1,4 +1,4 @@
-import orderClient from '@/lib/apiOrderRequest';
+import apiClient from '@/lib/apiClient';
 import { ORDER_REQUEST_API_URL } from './constants';
 
 interface OrderRequestBody {
@@ -16,7 +16,7 @@ export const createOrder = async (
   authToken: string,
   body: OrderRequestBody
 ) => {
-  const response = await orderClient.post(ORDER_REQUEST_API_URL, body, {
+  const response = await apiClient.post(ORDER_REQUEST_API_URL, body, {
     headers: {
       Authorization: authToken,
     },

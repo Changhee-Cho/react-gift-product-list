@@ -7,9 +7,11 @@ import LoginInput from '@src/components/LoginInput';
 import { useUserInfo } from '@/contexts/AuthContext';
 import ROUTES from '@/constants/routes';
 import { login } from '@/apis/auth';
-import 'react-toastify/dist/ReactToastify.css';
 import { useState } from 'react';
 import loadingGif from '@src/assets/icons/loading.gif';
+import { toast } from 'react-toastify';
+
+const DEFAULT_ERROR_MESSAGE = '로그인에 실패했습니다.';
 
 const mainStyle = css`
   width: 100%;
@@ -93,7 +95,13 @@ const Login = () => {
       } else {
         navigate(ROUTES.HOME, { replace: true });
       }
-    } catch (error) {
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const errorMessage =
+        error?.response?.data?.data?.message || DEFAULT_ERROR_MESSAGE;
+      if (status >= 400 && status < 500) {
+        toast.error(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
