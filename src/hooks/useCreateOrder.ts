@@ -67,7 +67,7 @@ export const useCreateOrder = (
             `발신자 이름: ${senderData.senderName}\n` +
             `메시지: ${senderData.letter}`
         );
-        navigate('/');
+        navigate(ROUTES.HOME);
         return;
       } else {
         alert('주문 처리에 실패했습니다. 다시 시도해주세요.');
