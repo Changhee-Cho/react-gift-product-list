@@ -24,7 +24,7 @@ const rankingItemBox = css`
 
 const rankingNumberWins = css`
   position: absolute;
-  z-index: 2;
+  z-index: ${theme.zIndex.itemRankingBadge};
   width: 1.25rem;
   height: 1.25rem;
   border-radius: 4px;
@@ -41,7 +41,7 @@ const rankingNumberWins = css`
 
 const rankingNumber = css`
   position: absolute;
-  z-index: 2;
+  z-index: ${theme.zIndex.itemRankingBadge};
   width: 1.25rem;
   height: 1.25rem;
   border-radius: 4px;
