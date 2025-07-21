@@ -1,6 +1,5 @@
 import { css } from '@emotion/react';
 import theme from '@src/styles/tokens/index';
-import product from '@src/assets/mock/itemList_mock';
 
 const space12 = css`
   height: ${theme.spacing.spacing3};
@@ -82,25 +81,30 @@ const spanStyle = css`
   color: ${theme.colors.gray700};
 `;
 
-const ItemInfo = () => {
+interface ItemInfoProps {
+  product: {
+    name: string;
+    brandName: string;
+    price: number;
+    imageURL: string;
+  };
+}
+
+const ItemInfo = ({ product }: ItemInfoProps) => {
   return (
     <div css={divStyle}>
       <div css={space12} />
       <p css={pTitle}>상품 정보</p>
       <div css={space12} />
       <div css={itemBox}>
-        <img
-          css={imgStyle}
-          src={product.imageURL}
-          alt=""
-        />
+        <img css={imgStyle} src={product.imageURL} alt={product.name} />
         <div css={itemInfoDiv}>
           <p css={itemTitleP}>{product.name}</p>
-          <p css={itemBrandP}>{product.brandInfo.name}</p>
+          <p css={itemBrandP}>{product.brandName}</p>
           <div css={space4} />
           <p css={priceP}>
             <span css={spanStyle}>상품가 </span>
-            {product.price.sellingPrice}원
+            {product.price.toLocaleString()}원
           </p>
         </div>
       </div>

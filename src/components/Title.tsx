@@ -19,7 +19,7 @@ const wrapperStyle = css`
   width: 100%;
   max-width: 720px;
   background-color: ${theme.colors.gray00};
-  z-index: 1000;
+  z-index: ${theme.zIndex.titleNav};
 `;
 
 const navStyle = css`

@@ -2,6 +2,8 @@ import { css } from '@emotion/react';
 import { useAuthNavigation } from '@/hooks/useAuthNavigation';
 import theme from '@src/styles/tokens/index';
 
+const EXPANDED_DISPLAY_COUNT = 21;
+const DEFAULT_DISPLAY_COUNT = 6;
 const TOP_RANK_COUNT = 3;
 
 const rankingGrid = css`
@@ -22,7 +24,7 @@ const rankingItemBox = css`
 
 const rankingNumberWins = css`
   position: absolute;
-  z-index: 2;
+  z-index: ${theme.zIndex.itemRankingBadge};
   width: 1.25rem;
   height: 1.25rem;
   border-radius: 4px;
@@ -39,7 +41,7 @@ const rankingNumberWins = css`
 
 const rankingNumber = css`
   position: absolute;
-  z-index: 2;
+  z-index: ${theme.zIndex.itemRankingBadge};
   width: 1.25rem;
   height: 1.25rem;
   border-radius: 4px;
@@ -124,7 +126,9 @@ type Props = {
 const ProductRankingList = ({ products, expanded }: Props) => {
   const { navigateIfLoggedIn } = useAuthNavigation();
 
-  const displayedCount = expanded ? 21 : 6;
+  const displayedCount = expanded
+    ? EXPANDED_DISPLAY_COUNT
+    : DEFAULT_DISPLAY_COUNT;
 
   const goOrder = (id: number) => {
     navigateIfLoggedIn(`/order/${id}`);

@@ -5,6 +5,8 @@ import RecipientList from '@src/components/RecipientList';
 import { useFormContext } from 'react-hook-form';
 import type { OrderSchema } from '@src/hooks/useOrderForm';
 import type { SenderSchema } from '@src/hooks/useOrderFormComplete';
+import { useEffect } from 'react';
+import { useUserInfo } from '@/contexts/AuthContext';
 
 const coverStyle = css`
   width: 100%;
@@ -92,7 +94,16 @@ const OrderForm = ({ onOpenRecipientModal, recipients = [] }: Props) => {
   const {
     register: registerSender,
     formState: { errors: errorsSender },
+    setValue,
   } = useFormContext<SenderSchema>();
+
+  const { user, loading } = useUserInfo();
+
+  useEffect(() => {
+    if (!loading && user?.name) {
+      setValue('senderName', user.name);
+    }
+  }, [loading, user, setValue]);
 
   return (
     <>

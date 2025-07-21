@@ -6,6 +6,7 @@ const SESSION_STORAGE_KEY = 'user';
 interface User {
   name: string;
   email: string;
+  authToken: string;
 }
 
 interface UserInfoContextType {

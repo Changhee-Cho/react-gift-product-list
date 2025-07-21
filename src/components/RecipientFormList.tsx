@@ -20,7 +20,7 @@ const coverStyle = css`
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: ${theme.zIndex.modal};
   opacity: 1;
   visibility: visible;
   transition:
