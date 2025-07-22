@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { fetchThemeItemList } from '@/apis/themeItemList';
 import type { themeItemInfo } from '@/types/themeItemInfo';
 
+const API_ERROR_MESSAGE = '알 수 없는 오류가 발생했습니다.';
+
 interface FetchThemeItemListResponse {
   list: themeItemInfo[];
   cursor: number;
@@ -38,7 +40,12 @@ export const useThemeItemList = (
       });
       setCursor(data.cursor);
       setHasMore(data.hasMoreList);
-    } catch {
+    } catch (error: any) {
+      if (error.response?.status >= 400 || error.response?.status < 500) {
+        const message =
+          error?.response?.data?.data?.message || API_ERROR_MESSAGE;
+        alert(message);
+      }
     } finally {
       setLoading(false);
     }
