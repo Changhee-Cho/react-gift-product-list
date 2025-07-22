@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createOrder } from '@/apis/orderrequest';
+import { createOrder } from '@/apis/orderRequest';
 import { useNavigate } from 'react-router-dom';
 import ROUTES from '@/constants/routes';
 import axios from 'axios';

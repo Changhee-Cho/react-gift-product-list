@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchProductSummary } from '@/apis/orderpage';
+import { fetchProductSummary } from '@/apis/orderPage';
 import type { Product } from '@/types/product';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
