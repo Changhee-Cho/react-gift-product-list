@@ -2,6 +2,8 @@ import { css } from '@emotion/react';
 import theme from '@src/styles/tokens/index';
 import loadingGif from '@src/assets/icons/loading.gif';
 import useThemeCategories from '@/hooks/useThemeCategories';
+import { Link } from 'react-router-dom';
+import { getThemePagePath } from '@/constants/routes';
 
 const spacer24 = css`
   width: 100%;
@@ -34,7 +36,7 @@ const itemsBox = css`
   gap: 20px 4px;
 `;
 
-const itemDiv = css`
+const itemLink = css`
   width: 100%;
   height: 100%;
   display: flex;
@@ -43,6 +45,7 @@ const itemDiv = css`
   justify-content: center;
   gap: 0.25rem;
   cursor: pointer;
+  text-decoration: none;
 `;
 
 const itemImage = css`
@@ -100,10 +103,14 @@ const Maintheme = () => {
         </div>
         <div css={itemsBox}>
           {categories.map(({ themeId, name, image }) => (
-            <div key={themeId} css={itemDiv}>
+            <Link
+              key={themeId}
+              to={getThemePagePath(themeId.toString())}
+              css={itemLink}
+            >
               <img css={itemImage} src={image} alt={name} />
               <p css={itemBoxText}>{name}</p>
-            </div>
+            </Link>
           ))}
         </div>
       </section>

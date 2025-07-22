@@ -6,12 +6,14 @@ import MyPage from '@/pages/MyPage';
 import Order from '@/pages/Order';
 import PrivateRoute from '@/router/PrivateRoute';
 import ROUTES from '@/constants/routes';
+import ThemeItemListPage from '@/pages/ThemeItemListPage';
 
 const Router = () => {
   return (
     <Routes>
       <Route path={ROUTES.HOME} element={<Home />} />
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+      <Route path={ROUTES.THEME_PAGE} element={<ThemeItemListPage />}></Route>
 
       <Route
         path={ROUTES.MY_PAGE}
