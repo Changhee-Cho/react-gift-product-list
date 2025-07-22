@@ -137,7 +137,7 @@ const ThemeItemList = () => {
   return (
     <div css={divCover}>
       <div css={divItemList}>
-        {items.map((item, index) => {
+        {items.map((item) => {
           return (
             <div key={item.id} css={linkStyle} onClick={() => goOrder(item.id)}>
               <div css={itemBox}>
