@@ -1,7 +1,7 @@
 import { css } from '@emotion/react';
 import theme from '@src/styles/tokens/index';
 import templates from '@src/assets/mock/order_card_template';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import type { SenderSchema } from '@/hooks/useOrderFormComplete';
 
@@ -130,6 +130,11 @@ const PresentCard = () => {
     setValue,
     formState: { errors },
   } = useFormContext<SenderSchema>();
+
+  useEffect(() => {
+    setValue('letter', selectedCard.defaultTextMessage);
+    setValue('messageCardId', selectedCard.id.toString());
+  }, [selectedCard, setValue]);
 
   const handleCardClick = (card: (typeof templates)[0]) => {
     setSelectedCard(card);
