@@ -134,7 +134,7 @@ const PresentCard = () => {
   useEffect(() => {
     setValue('letter', selectedCard.defaultTextMessage);
     setValue('messageCardId', selectedCard.id.toString());
-  }, [selectedCard, setValue]);
+  }, [setValue]);
 
   const handleCardClick = (card: (typeof templates)[0]) => {
     setSelectedCard(card);
