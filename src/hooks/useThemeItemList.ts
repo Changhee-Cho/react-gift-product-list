@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useRef } from 'react';
 import { fetchThemeItemList } from '@/apis/themeItemList';
 import type { themeItemInfo } from '@/types/themeItemInfo';
+import { STALE_TIME } from '@/constants/apiReactQueryStaleTime';
 
 const API_ERROR_MESSAGE = '알 수 없는 오류가 발생했습니다.';
 
@@ -20,59 +22,43 @@ interface UseThemeItemListResult {
 export const useThemeItemList = (
   themeId: string | undefined
 ): UseThemeItemListResult => {
-  const [items, setItems] = useState<themeItemInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [cursor, setCursor] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
-  const fetchItems = useCallback(async (themeId: string, cursor: number) => {
-    try {
-      setLoading(true);
-      const data: FetchThemeItemListResponse = await fetchThemeItemList(
-        themeId,
-        cursor
-      );
-      setItems((prev) => {
-        const existingIds = new Set(prev.map((item) => item.id));
-        const filtered = data.list.filter((item) => !existingIds.has(item.id));
-        return [...prev, ...filtered];
-      });
-      setCursor(data.cursor);
-      setHasMore(data.hasMoreList);
-    } catch (error: any) {
-      if (error.response?.status >= 400 || error.response?.status < 500) {
-        const message =
-          error?.response?.data?.data?.message || API_ERROR_MESSAGE;
-        alert(message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!themeId) return;
-    setItems([]);
-    setCursor(0);
-    setHasMore(true);
-    fetchItems(themeId, 0);
-  }, [themeId, fetchItems]);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useInfiniteQuery<FetchThemeItemListResponse>({
+      queryKey: ['themeItemList', themeId],
+      queryFn: async ({ pageParam = 0 }) => {
+        if (!themeId) throw new Error('themeId가 필요합니다.');
+        return await fetchThemeItemList(themeId, pageParam as number);
+      },
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => {
+        return lastPage.hasMoreList ? lastPage.cursor : undefined;
+      },
+      enabled: !!themeId,
+      staleTime: STALE_TIME,
+      retry: false,
+      throwOnError: true,
+    });
 
   const lastRef = useCallback(
     (node: HTMLDivElement | null) => {
-      if (loading || !hasMore) return;
+      if (isFetchingNextPage || !hasNextPage) return;
       if (observerRef.current) observerRef.current.disconnect();
 
       observerRef.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && themeId && !loading) {
-          fetchItems(themeId, cursor);
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage().catch((err) => {
+            const message =
+              err?.response?.data?.data?.message || API_ERROR_MESSAGE;
+            alert(message);
+          });
         }
       });
 
       if (node) observerRef.current.observe(node);
     },
-    [loading, hasMore, cursor, themeId, fetchItems]
+    [isFetchingNextPage, hasNextPage, fetchNextPage]
   );
 
   useEffect(() => {
@@ -81,5 +67,12 @@ export const useThemeItemList = (
     };
   }, []);
 
-  return { items, loading, hasMore, lastRef };
+  const items = data?.pages.flatMap((page) => page.list) ?? [];
+
+  return {
+    items,
+    loading: isLoading,
+    hasMore: !!hasNextPage,
+    lastRef,
+  };
 };

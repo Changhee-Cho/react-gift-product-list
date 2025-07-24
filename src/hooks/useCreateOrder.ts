@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { createOrder as createOrderApi } from '@/apis/orderRequest';
+import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { createOrder as createOrderApi } from '@/apis/orderRequest';
 import ROUTES from '@/constants/routes';
 import axios from 'axios';
 import type { OrderSchema } from '@/hooks/useOrderForm';
@@ -9,13 +9,20 @@ import type { Product } from '@/types/product';
 
 const RECEIVER_REQUIRED_MESSAGE = '받는 사람을 추가해 주세요!';
 const LOGIN_REQUIRED_MESSAGE = '로그인이 필요합니다.';
+const NO_ITEM_MESSAGE = '상품 정보가 없습니다.';
+const ERROR_NO_401_MESSAGE = '로그인이 필요합니다.';
 
-export const useCreateOrder = (
-  userToken: string | undefined,
-  recipients: OrderSchema[],
-  product: Product | null
-) => {
-  const [isOrdering, setIsOrdering] = useState(false);
+interface UseCreateOrderProps {
+  userToken?: string;
+  recipients: OrderSchema[];
+  product: Product | null;
+}
+
+export const useCreateOrder = ({
+  userToken,
+  recipients,
+  product,
+}: UseCreateOrderProps) => {
   const navigate = useNavigate();
 
   const validateOrder = (): boolean => {
@@ -36,7 +43,7 @@ export const useCreateOrder = (
     }
 
     if (!product) {
-      alert('상품 정보가 없습니다.');
+      alert(NO_ITEM_MESSAGE);
       return false;
     }
 
@@ -55,26 +62,16 @@ export const useCreateOrder = (
     })),
   });
 
-  const sendOrderRequest = async (requestBody: ReturnType<typeof buildOrderRequestBody>) => {
-    return await createOrderApi(userToken!, requestBody);
-  };
-
-  const createOrder = async (senderData: SenderSchema) => {
-    setIsOrdering(true);
-
-    if (!validateOrder()) {
-      setIsOrdering(false);
-      return;
-    }
-
-    const requestBody = buildOrderRequestBody(senderData);
-    const totalRecipientQuantity = recipients.reduce(
-      (sum, r) => sum + (Number(r.quantity) || 0),
-      0
-    );
-
-    try {
-      const response = await sendOrderRequest(requestBody);
+  const mutation = useMutation({
+    mutationFn: async (senderData: SenderSchema) => {
+      const requestBody = buildOrderRequestBody(senderData);
+      return await createOrderApi(userToken!, requestBody);
+    },
+    onSuccess: (response, senderData) => {
+      const totalRecipientQuantity = recipients.reduce(
+        (sum, r) => sum + (Number(r.quantity) || 0),
+        0
+      );
 
       if (response.status === 201 && response.data?.data?.success) {
         alert(
@@ -85,21 +82,23 @@ export const useCreateOrder = (
             `메시지: ${senderData.letter}`
         );
         navigate(ROUTES.HOME);
-      } else {
-        alert('주문 처리에 실패했습니다. 다시 시도해주세요.');
       }
-    } catch (error: any) {
+    },
+    onError: (error: unknown) => {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
-        alert('로그인이 필요합니다.');
+        alert(ERROR_NO_401_MESSAGE);
         navigate(ROUTES.LOGIN);
-      } else {
-        alert('알 수 없는 오류가 발생했습니다.');
-        console.error(error);
       }
-    } finally {
-      setIsOrdering(false);
-    }
+    },
+  });
+
+  const createOrder = (senderData: SenderSchema) => {
+    if (!validateOrder()) return;
+    mutation.mutate(senderData);
   };
 
-  return { createOrder, isOrdering };
+  return {
+    createOrder,
+    isOrdering: mutation.isPending,
+  };
 };

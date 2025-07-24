@@ -1,11 +1,11 @@
 import apiClient from '@/lib/apiClient';
 import { LOGIN_API_URL } from './constants';
-interface LoginParams {
+export interface LoginParams {
   email: string;
   password: string;
 }
 
-interface LoginResponse {
+export interface LoginResponse {
   email: string;
   name: string;
   authToken: string;

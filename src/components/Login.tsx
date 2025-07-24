@@ -6,12 +6,8 @@ import useLoginForm from '@src/hooks/useLoginForm';
 import LoginInput from '@src/components/LoginInput';
 import { useUserInfo } from '@/contexts/AuthContext';
 import ROUTES from '@/constants/routes';
-import { login } from '@/apis/auth';
-import { useState } from 'react';
 import loadingGif from '@src/assets/icons/loading.gif';
-import { toast } from 'react-toastify';
-
-const DEFAULT_ERROR_MESSAGE = '로그인에 실패했습니다.';
+import useLoginMutation from '@/hooks/useLoginMutation';
 
 const mainStyle = css`
   width: 100%;
@@ -59,6 +55,7 @@ const spacer16 = css`
 const spacer48 = css`
   height: ${theme.spacing.spacing12};
 `;
+
 const loadingDiv = css`
   position: fixed;
   top: 0;
@@ -70,6 +67,7 @@ const loadingDiv = css`
   align-items: center;
   z-index: ${theme.zIndex.loadingGif};
 `;
+
 const loadingGifStyle = css`
   width: 50px;
 `;
@@ -79,42 +77,33 @@ const Login = () => {
   const { register, handleSubmit, isError, loginActivated } = useLoginForm();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isLoading, setIsLoading] = useState(false);
+
+  const { mutateAsync, isPending } = useLoginMutation();
 
   const onSubmit = async (data: { email: string; password: string }) => {
-    setIsLoading(true);
-    try {
-      const { email, name, authToken } = await login(data);
-      setUser({ email, name, authToken });
+    const response = await mutateAsync(data);
+    const { email, name, authToken } = response;
+    setUser({ email, name, authToken });
 
-      const params = new URLSearchParams(location.search);
-      const redirectPath = params.get('redirect');
-
-      if (redirectPath) {
-        navigate(redirectPath, { replace: true });
-      } else {
-        navigate(ROUTES.HOME, { replace: true });
-      }
-    } catch (error: any) {
-      const status = error?.response?.status;
-      const errorMessage =
-        error?.response?.data?.data?.message || DEFAULT_ERROR_MESSAGE;
-      if (status >= 400 && status < 500) {
-        toast.error(errorMessage);
-      }
-    } finally {
-      setIsLoading(false);
+    const params = new URLSearchParams(location.search);
+    const redirectPath = params.get('redirect');
+    if (redirectPath) {
+      navigate(redirectPath, { replace: true });
+    } else {
+      navigate(ROUTES.HOME, { replace: true });
     }
   };
 
   return (
     <main css={mainStyle}>
-      {isLoading && (
+      {isPending && (
         <div css={loadingDiv}>
           <img css={loadingGifStyle} src={loadingGif} alt="로딩중..." />
         </div>
       )}
+
       <img css={logoStyle} src={kakao_logo} alt="카카오 공식 로고" />
+
       <section css={sectionStyle}>
         <form onSubmit={handleSubmit(onSubmit)}>
           <LoginInput

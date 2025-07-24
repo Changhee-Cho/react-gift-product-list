@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import apiClient from '@src/lib/apiClient';
 import { REALTIME_API_URL } from '@src/apis/constants';
+import { STALE_TIME } from '@/constants/apiReactQueryStaleTime';
 
-type Product = {
+export type Product = {
   id: number;
   name: string;
   price: {
@@ -18,9 +19,19 @@ type Product = {
   };
 };
 
-type RankingProductParams = {
+export type RankingProductParams = {
   targetType: string;
   rankType: string;
+};
+
+const fetchRankingProducts = async ({
+  targetType,
+  rankType,
+}: RankingProductParams): Promise<Product[]> => {
+  const response = await apiClient.get(REALTIME_API_URL, {
+    params: { targetType, rankType },
+  });
+  return response.data?.data ?? [];
 };
 
 type RankingProductState = {
@@ -29,34 +40,22 @@ type RankingProductState = {
   products: Product[];
 };
 
-const useRankingProducts = ({ targetType, rankType }: RankingProductParams) => {
-  const [state, setState] = useState<RankingProductState>({
-    loading: true,
-    error: false,
-    products: [],
+const useRankingProducts = ({
+  targetType,
+  rankType,
+}: RankingProductParams): RankingProductState => {
+  const { data, isLoading, isError } = useQuery<Product[], Error>({
+    queryKey: ['rankingProducts', targetType, rankType],
+    queryFn: () => fetchRankingProducts({ targetType, rankType }),
+    staleTime: STALE_TIME,
+    retry: false,
   });
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setState({ loading: true, error: false, products: [] });
-
-        const response = await apiClient.get(REALTIME_API_URL, {
-          params: { targetType, rankType },
-        });
-
-        const data = response.data?.data ?? [];
-
-        setState({ loading: false, error: false, products: data });
-      } catch (error) {
-        setState({ loading: false, error: true, products: [] });
-      }
-    };
-
-    fetchProducts();
-  }, [targetType, rankType]);
-
-  return state;
+  return {
+    loading: isLoading,
+    error: isError,
+    products: data ?? [],
+  };
 };
 
 export default useRankingProducts;

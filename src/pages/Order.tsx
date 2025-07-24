@@ -75,11 +75,11 @@ const Order = () => {
   const { handleSubmit } = methods;
   const { user } = useUserInfo();
 
-  const { createOrder, isOrdering } = useCreateOrder(
-    user?.authToken,
+  const { createOrder, isOrdering } = useCreateOrder({
+    userToken: user?.authToken,
     recipients,
-    product
-  );
+    product,
+  });
 
   const unitPrice = product?.price || 0;
   const totalRecipientQuantity = recipients.reduce(
@@ -88,8 +88,8 @@ const Order = () => {
   );
   const totalOrderPrice = unitPrice * totalRecipientQuantity;
 
-  const onSubmit = async (data: SenderSchema) => {
-    await createOrder(data);
+  const onSubmit = (data: SenderSchema) => {
+    createOrder(data);
   };
 
   if (!product || isFetchingProduct || isOrdering)
